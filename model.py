@@ -17,7 +17,7 @@ class BookTable(Base):
     publishyear = Column(Integer)
 
     # Quan hệ với RentBook
-    rentals = relationship("RentBook", back_populates="book")
+    # rentals = relationship("RentBook", back_populates="book")
 
 class UserTable(Base):
     __tablename__ = 'user'
@@ -29,7 +29,7 @@ class UserTable(Base):
     status = Column(Boolean)
 
     # Quan hệ với RentBook
-    rentals = relationship("RentBook", back_populates="user")
+    # rentals = relationship("RentBook", back_populates="user")
 
 class RentBook(Base):
     __tablename__ = 'rentbook'
@@ -43,4 +43,5 @@ class RentBook(Base):
     # Quan hệ với Book và User
     book = relationship("BookTable", back_populates="rentals")
     user = relationship("UserTable", back_populates="rentals")
+    
 
