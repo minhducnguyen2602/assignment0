@@ -1,14 +1,20 @@
 from pydantic import BaseModel
+import datetime
+from typing import Optional
 class BookInfo(BaseModel):
-    book_name: str
+    bookname: str
     author: str
-    publish_year: int
+    publishyear: int
+    category: str
 class UserInfo(BaseModel):
-    name: str
-    username: str
-    password: str
-    # status: bool
+    username: Optional[str]
+    dateofbirth: Optional[datetime.date]
 
-class UserLogin(BaseModel):
-    username: str
-    password: str
+
+class RentInfo(BaseModel):
+    userid: int
+    bookid: int
+    # dayofrent: date
+    expirationdate: datetime.date
+
+

@@ -1,55 +1,49 @@
 from sqlalchemy import create_engine, select, bindparam
 from setting_database.db.core.initializer import create_connection
-from model import *
+from db.models.model import *
 from typing import List, Any, Dict
 from schema import *
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_, and_
 from sqlalchemy.engine import Result
-
+from sqlalchemy.orm import Session
 class DML:
     @staticmethod
-    def add_users(user: UserInfo):
+    def add_users(session: Session, user: UserInfo):
         try:
-            statement_checkusername = select(UserTable).where(
-                UserTable.username==bindparam('c_username', type_=String)
-            )
-            with create_connection() as conn:
-                result = conn.execute(statement_checkusername, {"c_username": user.username})
-
-                # Sử dụng fetchone() để kiểm tra xem có dữ liệu hay không
-                existing_user = result.fetchone()
-
-            if existing_user:
-                return {"error": "Username already exists"}
-            statement = UserTable.insert().values(
-                name=user.name,
+            
+            new_user = UserTable(
                 username=user.username,
-                password=user.password,
-                status = False
+                dateofbirth = user.dateofbirth
             )
-            with create_connection() as conn:
-                conn.execute(statement)
-            return {"message": "User register successfully"}
+
+            session.add(new_user)
+            session.commit()
+            return {"message": "User registered successfully"}
         except SQLAlchemyError as e:
-            # Xử lý lỗi và trả về phản hồi
+            # Handle the error and return the response
             error_message = str(e)
             return {"error": error_message}
-    def login(user: UserLogin):
+    @staticmethod
+    def update_users(id, session: Session, user: UserInfo):
         try:
+            if not session.query(UserTable).filter_by(userid=id).first():
+                return {"error": "UserID not found"}
+            
+            update_data = {}
 
-            statement = select(UserTable).where(and_(
-                UserTable.username==bindparam('c_username', type_=String),
-                UserTable.password==bindparam('c_password', type_=String)
-            ))
-            with create_connection() as conn:
-                result = conn.execute(statement, {"c_username": user.username, "c_password": user.password})
-                check = result.fetchone()
-            if check:
-                return {"message": "Login successfully"}
-            else:
-                return {"error": "Wrong username or password"}
-        except SQLAlchemyError as e:
-            # Xử lý lỗi và trả về phản hồi
+            if user.username != "":
+                update_data['username'] = user.username
+            if user.dateofbirth:
+                update_data['dateofbirth'] = user.dateofbirth
+    
+
+            session.query(UserTable).filter_by(userid=id).update(update_data)
+
+            # session.query(BookTable).filter_by(bookid=book_id).update(**book.model_dump())
+
+            session.commit()
+            return {"message": "user updated successfully"}
+        except Exception as e:
             error_message = str(e)
             return {"error": error_message}

@@ -1,28 +1,38 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 import asyncio
 from pydantic import BaseModel
 from schema import *
 from ctrl.users import DML
+from sqlalchemy.orm import Session
+from database import get_db
+from exceptions import *
 router = APIRouter()
 
 
 
-@router.post("/registering")
-async def registering(user: UserInfo):
-    result = DML.add_users(user)
+@router.post("/registering", tags = ["User"])
+async def registering(user: UserInfo, db: Session = Depends(get_db)):
+    result = DML.add_users(db, user)
     if "error" in result:
-        # Nếu có lỗi, ném một HTTPException với mã lỗi 500 và thông báo lỗi
-        raise HTTPException(status_code=500, detail=result["error"])
+        if "not found" in result["error"]:
+            raise NotFoundException(result["error"])
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
     else:
         # Nếu thành công, trả về một thông báo thành công
         return {"message": "User register successfully"}
     
-@router.post("/login")
-async def login(user:UserLogin):
-    result = DML.login(user)
+    
+
+
+@router.put("/update_user_information", tags = ["User"])
+async def update_user(id: int, user: UserInfo, db: Session = Depends(get_db)):
+    result = DML.update_users(id, db, user)
     if "error" in result:
-        # Nếu có lỗi, ném một HTTPException với mã lỗi 500 và thông báo lỗi
-        raise HTTPException(status_code=500, detail=result["error"])
+        if "not found" in result["error"]:
+            raise NotFoundException(result["error"])
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
     else:
         # Nếu thành công, trả về một thông báo thành công
-        return {"message": "Login sucess"}    
+        return {"message": "User update successfully"}
